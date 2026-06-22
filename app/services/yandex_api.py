@@ -46,7 +46,8 @@ async def create_simple_report(
     for row, res in enumerate(projects, start=2):
         collection_time = res.close_date - res.create_date
         worksheet.write(row, 0, str(res.name), cell_format)
-        worksheet.write(row, 1, format_time_delta(collection_time), cell_format)
+        worksheet.write(row, 1, format_time_delta(collection_time),
+                        cell_format)
         worksheet.write(row, 2, str(res.description), cell_format)
     last_cell = len(projects) + 2
     worksheet.merge_range(last_cell, 0, last_cell, 2,

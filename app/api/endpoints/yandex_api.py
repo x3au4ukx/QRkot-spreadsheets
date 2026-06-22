@@ -40,7 +40,8 @@ async def get_report(
         )
 
     try:
-        upload_url = await create_simple_report(yandex_client, projects, 'Reports')
+        upload_url = await create_simple_report(yandex_client, projects,
+                                                'Reports')
         return upload_url
     except Exception as e:
         raise HTTPException(

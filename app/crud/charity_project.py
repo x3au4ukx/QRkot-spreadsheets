@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select
