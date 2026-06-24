@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from http import HTTPStatus
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,6 +12,7 @@ from app.crud.charity_project import charity_project_crud
 
 
 router = APIRouter()
+"""Роутер для работы с отчётами."""
 
 
 @router.post(
@@ -22,9 +24,7 @@ async def get_report(
         session: AsyncSession = Depends(get_async_session),
         yandex_client: YandexDiskClient = Depends(get_yandex_client)
 ) -> str:
-    """
-    Создание отчёта в Excel-файле на Яндекс Диске
-    """
+    """Создание отчёта в Excel-файле на Яндекс Диске."""
     from_date = datetime(2000, 1, 1)
     to_date = datetime.now() + timedelta(days=365 * 100)
     projects = await charity_project_crud.get_projects_by_completion_rate(
@@ -35,16 +35,15 @@ async def get_report(
 
     if not projects:
         raise HTTPException(
-            status_code=404,
-            detail="Нет данных для формирования отчёта"
+            status_code=HTTPStatus.NOT_FOUND,
+            detail='Нет данных для формирования отчёта'
         )
 
-    try:
-        upload_url = await create_simple_report(yandex_client, projects,
-                                                'Reports')
-        return upload_url
-    except Exception as e:
+    upload_url = await create_simple_report(yandex_client, projects,
+                                            'Reports')
+    if not upload_url:
         raise HTTPException(
-            status_code=500,
-            detail=f"Ошибка при создании отчёта: {str(e)}"
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            detail='Ошибка при создании отчёта'
         )
+    return upload_url

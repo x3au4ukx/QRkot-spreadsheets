@@ -10,6 +10,7 @@ from app.core.config import settings
 
 
 def format_time_delta(time: timedelta):
+    """Форматировать timedelta в строку 'дни ч. мин.'."""
     hours = time.seconds // 3600
     minutes = (time.seconds % 3600) // 60
     if time.days > 0:
@@ -22,6 +23,7 @@ async def create_simple_report(
     projects: List[CharityProject],
     folder: str = 'Reports'
 ) -> str:
+    """Создать Excel-отчёт по проектам и загрузить на Яндекс Диск."""
     now_date_time = datetime.now().strftime(settings.report_format)
     safe_filename = f'QRKot_report_{now_date_time}'.replace(
         ':', '-').replace(' ', '_').replace('/', '-')
@@ -29,7 +31,7 @@ async def create_simple_report(
         safe_filename, folder)
     output = io.BytesIO()
     workbook = xlsxwriter.Workbook(output)
-    worksheet = workbook.add_worksheet("Отчет")
+    worksheet = workbook.add_worksheet('Отчет')
     title_format = workbook.add_format({'bold': True, 'font_size': 14})
     header_format = workbook.add_format({
         'bold': True,
@@ -40,7 +42,7 @@ async def create_simple_report(
     cell_format = workbook.add_format({'border': 1, 'align': 'center'})
     total_cell_format = workbook.add_format({'bold': True, 'border': 1})
     worksheet.merge_range('A1:C1', f'Отчет от {now_date_time}', title_format)
-    headers = ['Название проекта', 'Время сбора', 'Описание']
+    headers = ('Название проекта', 'Время сбора', 'Описание')
     for col, header in enumerate(headers):
         worksheet.write(1, col, header, header_format)
     for row, res in enumerate(projects, start=2):
@@ -49,9 +51,10 @@ async def create_simple_report(
         worksheet.write(row, 1, format_time_delta(collection_time),
                         cell_format)
         worksheet.write(row, 2, str(res.description), cell_format)
-    last_cell = len(projects) + 2
+    count_projects = len(projects)
+    last_cell = count_projects + 2
     worksheet.merge_range(last_cell, 0, last_cell, 2,
-                          f'Всего проектов: {len(projects)}',
+                          f'Всего проектов: {count_projects}',
                           total_cell_format)
     worksheet.set_column('A:A', 30)
     worksheet.set_column('B:B', 20)

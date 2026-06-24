@@ -16,19 +16,19 @@ class YandexDiskClient:
         self._client: Optional[httpx.AsyncClient] = None
 
     async def __aenter__(self):
+        """Вход в контекстный менеджер (создание HTTP клиента)."""
         self._client = httpx.AsyncClient(timeout=30.0)
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Выход из контекстного менеджера (закрытие HTTP клиента)."""
         if self._client:
             await self._client.aclose()
 
     async def create_excel_file(
         self, title: str, folder: str = 'Reports'
     ) -> tuple[str, str]:
-        """
-        Создаёт Excel-файл и возвращает ссылку для загрузки и путь к файлу.
-        """
+        """Создаёт файл и возвращает ссылку для загрузки и путь к файлу."""
         await self._create_folder(folder)
         file_path = f'disk:/{folder}/{title}.xlsx'
         response = await self._client.get(
@@ -83,24 +83,20 @@ class YandexDiskClient:
 
     async def _create_folder(self, folder: str):
         """Создаёт папку, если её нет."""
-        try:
-            await self._client.put(
-                f'{self.base_url}/resources',
-                headers=self.headers,
-                params={'path': f'disk:/{folder}'}
-            )
-        except httpx.HTTPStatusError as e:
-            if e.response.status_code != 409:
-                print('Папка уже существует')
+        await self._client.put(
+            f'{self.base_url}/resources',
+            headers=self.headers,
+            params={'path': f'disk:/{folder}'}
+        )
 
 
 async def get_yandex_client():
-    """Dependency для получения клиента Яндекс Диска"""
+    """Dependency для получения клиента Яндекс Диска."""
     if settings.yandex_disk_token is None:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Яндекс Диск не настроен. Пожалуйста, "
-                   "добавьте YANDEX_DISK_TOKEN в .env-файл"
+            detail='Яндекс Диск не настроен. Пожалуйста, '
+                   'добавьте YANDEX_DISK_TOKEN в .env-файл.'
         )
 
     async with YandexDiskClient(settings.yandex_disk_token) as client:
